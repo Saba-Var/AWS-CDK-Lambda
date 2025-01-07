@@ -29,7 +29,7 @@ func NewAwsCdkLambdaStack(scope constructs.Construct, id string, props *AwsCdkLa
 	})
 
 	lambdaFunc := awslambda.NewFunction(stack, jsii.String("lambdaFunc"), &awslambda.FunctionProps{
-		Runtime: awslambda.Runtime_NODEJS_20_X(),
+		Runtime: awslambda.Runtime_PROVIDED_AL2023(),
 		Handler: jsii.String("main"),
 		Code:    awslambda.AssetCode_FromAsset(jsii.String("lambda/function.zip"), nil),
 	})
