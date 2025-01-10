@@ -12,8 +12,14 @@ const (
 	USER_TABLE = "userTable"
 )
 
+type UserStore interface {
+	DoesUserExists(username string) (bool, error)
+	RegisterUser(username, password string) error
+}
+
 type DynamoDbClient struct {
 	databaseStore *dynamodb.DynamoDB
+	UserStore
 }
 
 func (db *DynamoDbClient) DoesUserExists(username string) (bool, error) {
