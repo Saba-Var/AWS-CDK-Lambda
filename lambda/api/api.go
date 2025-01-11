@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"lambda/database"
 	"lambda/types"
+	"net/http"
 
 	"lambda/errors"
 
@@ -43,6 +44,38 @@ func (api *ApiHandler) RegisterUserHandler(event events.APIGatewayProxyRequest) 
 	}
 
 	return errors.SuccessResponse, nil
+}
+
+func (api *ApiHandler) LoginUser(event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	type LoginRequest struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	var loginRequest LoginRequest
+
+	err := json.Unmarshal([]byte(event.Body), &loginRequest)
+
+	if err != nil {
+		return errors.InvalidResponse, err
+	}
+
+	user, err := api.dbStore.GetUser(loginRequest.Username)
+
+	if err != nil {
+		return errors.InternalServerError, err
+	}
+
+	passwordsMatch := types.ComparePasswordHash(loginRequest.Password, user.PasswordHash)
+
+	if !passwordsMatch {
+		return errors.UnauthorizedResponse, nil
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode: http.StatusOK,
+		Body:       "Login successful",
+	}, nil
 }
 
 func (api *ApiHandler) parseAndValidateRequest(event events.APIGatewayProxyRequest) (*types.RegisterUser, error) {

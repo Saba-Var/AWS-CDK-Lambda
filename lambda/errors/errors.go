@@ -38,4 +38,14 @@ var (
 		StatusCode: http.StatusCreated,
 		Body:       "User registered successfully",
 	}
+
+	InvalidResponse = events.APIGatewayProxyResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       "Invalid request",
+	}
+
+	UnauthorizedResponse = events.APIGatewayProxyResponse{
+		StatusCode: http.StatusUnauthorized,
+		Body:       "Unauthorized",
+	}
 )

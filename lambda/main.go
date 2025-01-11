@@ -28,6 +28,8 @@ func main() {
 			switch event.Path {
 			case "/register":
 				return myApp.ApiHandler.RegisterUserHandler(event)
+			case "/login":
+				return myApp.ApiHandler.LoginUser(event)
 			default:
 				return events.APIGatewayProxyResponse{
 					StatusCode: 404,
