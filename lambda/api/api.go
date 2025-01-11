@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"lambda/database"
 	"lambda/types"
-	"net/http"
+
+	"lambda/errors"
 
 	"github.com/aws/aws-lambda-go/events"
 )
@@ -13,67 +14,66 @@ type ApiHandler struct {
 	dbStore database.UserStore
 }
 
-func NewApiHandler(dbStore database.UserStore) ApiHandler {
-	return ApiHandler{
+func NewApiHandler(dbStore database.UserStore) *ApiHandler {
+	return &ApiHandler{
 		dbStore: dbStore,
 	}
 }
 
-func (api ApiHandler) RegisterUserHandler(event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	var registerUser types.RegisterUser
-
-	err := json.Unmarshal([]byte(event.Body), &registerUser)
-
+func (api *ApiHandler) RegisterUserHandler(event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	registerUser, err := api.parseAndValidateRequest(event)
 	if err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-			Body:       "Invalid request",
-		}, err
+		response, exists := errors.ErrorResponse[err]
+		if exists {
+			return response, err
+		}
+		return errors.InternalServerError, err
+	}
+
+	if err := api.checkUserExists(registerUser.Username); err != nil {
+		response, exists := errors.ErrorResponse[err]
+		if exists {
+			return response, nil
+		}
+		return errors.InternalServerError, err
+	}
+
+	if err := api.createAndSaveUser(registerUser); err != nil {
+		return errors.InternalServerError, err
+	}
+
+	return errors.SuccessResponse, nil
+}
+
+func (api *ApiHandler) parseAndValidateRequest(event events.APIGatewayProxyRequest) (*types.RegisterUser, error) {
+	var registerUser types.RegisterUser
+	if err := json.Unmarshal([]byte(event.Body), &registerUser); err != nil {
+		return nil, errors.ErrInvalidRequest
 	}
 
 	if registerUser.Password == "" || registerUser.Username == "" {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-			Body:       "Username and password are required",
-		}, err
+		return nil, errors.ErrMissingCredentials
 	}
 
-	userExists, err := api.dbStore.DoesUserExists(registerUser.Username)
+	return &registerUser, nil
+}
 
+func (api *ApiHandler) checkUserExists(username string) error {
+	exists, err := api.dbStore.DoesUserExists(username)
 	if err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "Internal server error",
-		}, err
+		return err
 	}
-
-	if userExists {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusConflict,
-			Body:       "User already exists",
-		}, nil
+	if exists {
+		return errors.ErrUserExists
 	}
+	return nil
+}
 
-	newUser, err := types.NewUser(&registerUser)
-
+func (api *ApiHandler) createAndSaveUser(registerUser *types.RegisterUser) error {
+	newUser, err := types.NewUser(registerUser)
 	if err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "Internal server error",
-		}, err
+		return err
 	}
 
-	err = api.dbStore.RegisterUser(*newUser)
-
-	if err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "Internal server error",
-		}, err
-	}
-
-	return events.APIGatewayProxyResponse{
-		StatusCode: http.StatusCreated,
-		Body:       "User registered successfully",
-	}, nil
+	return api.dbStore.RegisterUser(*newUser)
 }
