@@ -14,6 +14,10 @@ type User struct {
 	PasswordHash string `json:"password"`
 }
 
+type Event struct {
+	Username string `json:"username"`
+}
+
 func NewUser(u *RegisterUser) (*User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 
