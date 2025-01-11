@@ -6,7 +6,7 @@ import (
 )
 
 type App struct {
-	ApiHandler api.ApiHandler
+	ApiHandler *api.ApiHandler
 }
 
 func NewApp() *App {
