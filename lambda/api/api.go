@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"lambda/database"
 	"lambda/types"
+	"lambda/utils"
 	"net/http"
 
 	"lambda/errors"
@@ -66,7 +67,7 @@ func (api *ApiHandler) LoginUser(event events.APIGatewayProxyRequest) (events.AP
 		return errors.InternalServerError, err
 	}
 
-	passwordsMatch := types.ComparePasswordHash(loginRequest.Password, user.PasswordHash)
+	passwordsMatch := utils.ComparePasswordHash(loginRequest.Password, user.PasswordHash)
 
 	if !passwordsMatch {
 		return errors.UnauthorizedResponse, nil

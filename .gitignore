@@ -21,3 +21,6 @@ cdk.out
 # lambda build outputs
 /lambda/bootstrap
 /lambda/function.zip
+
+# env
+/lambda/.env
