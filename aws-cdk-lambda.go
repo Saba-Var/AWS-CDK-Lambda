@@ -43,9 +43,6 @@ func NewAwsCdkLambdaStack(scope constructs.Construct, id string, props *AwsCdkLa
 			AllowMethods: jsii.Strings("OPTIONS", "GET", "POST", "PUT", "DELETE"),
 			AllowOrigins: jsii.Strings("*"),
 		},
-		DeployOptions: &awsapigateway.StageOptions{
-			LoggingLevel: awsapigateway.MethodLoggingLevel_INFO,
-		},
 	})
 
 	integration := awsapigateway.NewLambdaIntegration(lambdaFunc, nil)
