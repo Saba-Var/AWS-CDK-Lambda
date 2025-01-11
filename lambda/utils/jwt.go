@@ -1,10 +1,13 @@
 package utils
 
 import (
-	"github.com/golang-jwt/jwt"
+	"fmt"
 	"lambda/types"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt"
 )
 
 func CreateToken(user *types.User) string {
@@ -26,4 +29,42 @@ func CreateToken(user *types.User) string {
 	}
 
 	return tokenString
+}
+
+func ExtractTokenFromAuthHeader(
+	headers map[string]string,
+) string {
+	authHeader, ok := headers["Authorization"]
+
+	if !ok {
+		return ""
+	}
+
+	splitToken := strings.Split(authHeader, "Bearer ")
+
+	if len(splitToken) != 2 {
+		return ""
+	}
+
+	return splitToken[1]
+}
+
+func ParseToken(tokenString string) (jwt.MapClaims, error) {
+	secret := os.Getenv("JWT_SECRET")
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	return claims, nil
 }
