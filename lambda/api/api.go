@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"lambda/database"
 	"lambda/types"
 	"lambda/utils"
@@ -73,9 +74,11 @@ func (api *ApiHandler) LoginUser(event events.APIGatewayProxyRequest) (events.AP
 		return errors.UnauthorizedResponse, nil
 	}
 
+	token := utils.CreateToken(&user)
+
 	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusOK,
-		Body:       "Login successful",
+		Body:       fmt.Sprintf(`{"token": "%s"}`, token),
 	}, nil
 }
 
