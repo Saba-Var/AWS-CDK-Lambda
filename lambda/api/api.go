@@ -63,7 +63,7 @@ func (api ApiHandler) RegisterUserHandler(event events.APIGatewayProxyRequest) (
 		}, err
 	}
 
-	err = api.dbStore.RegisterUser(newUser.Username, newUser.PasswordHash)
+	err = api.dbStore.RegisterUser(*newUser)
 
 	if err != nil {
 		return events.APIGatewayProxyResponse{

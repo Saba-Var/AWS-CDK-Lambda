@@ -16,7 +16,7 @@ const (
 
 type UserStore interface {
 	DoesUserExists(username string) (bool, error)
-	RegisterUser(username, password string) error
+	RegisterUser(user types.User) error
 }
 
 type DynamoDbClient struct {
@@ -45,15 +45,15 @@ func (db *DynamoDbClient) DoesUserExists(username string) (bool, error) {
 	return true, nil
 }
 
-func (db *DynamoDbClient) RegisterUser(username, password string) error {
+func (db *DynamoDbClient) RegisterUser(user types.User) error {
 	_, err := db.databaseStore.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String(USER_TABLE),
 		Item: map[string]*dynamodb.AttributeValue{
 			"username": {
-				S: &username,
+				S: &user.Username,
 			},
 			"password": {
-				S: &password,
+				S: &user.PasswordHash,
 			},
 		},
 	})
@@ -62,7 +62,7 @@ func (db *DynamoDbClient) RegisterUser(username, password string) error {
 		return err
 	}
 
-	fmt.Printf("user %s registered\n", username)
+	fmt.Printf("user %s registered\n", user.Username)
 
 	return nil
 }
