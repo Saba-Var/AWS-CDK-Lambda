@@ -5,6 +5,7 @@ import (
 
 	"lambda/app"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
@@ -22,5 +23,18 @@ func HandleRequest(event Event) (string, error) {
 
 func main() {
 	myApp := app.NewApp()
-	lambda.Start(myApp.ApiHandler.RegisterUserHandler)
+	lambda.Start(
+		func(event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+			switch event.Path {
+			case "/register":
+				return myApp.ApiHandler.RegisterUserHandler(event)
+			default:
+				return events.APIGatewayProxyResponse{
+					StatusCode: 404,
+					Body:       "Not Found",
+				}, nil
+			}
+		},
+	)
+
 }

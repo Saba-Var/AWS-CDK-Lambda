@@ -14,8 +14,8 @@ type User struct {
 	PasswordHash string `json:"password"`
 }
 
-func (u *User) NewUser() (*User, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.PasswordHash), bcrypt.DefaultCost)
+func NewUser(u *RegisterUser) (*User, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 
 	if err != nil {
 		return nil, err
